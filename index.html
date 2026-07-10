@@ -191,8 +191,7 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
   const SIM = {
     budget: 100, attrs: { H: 0, K: 360, S: 0, V: 40 },
     owned: new Set(), levels: {}, hogyoku: null, bar: [],
-    kuro: false, radiant: false, raceTab: 'shinigami', sel: null,
-    open: new Set(['kido-map'])
+    kuro: false, radiant: false, tree: 'kido', sel: null
   };
 
   /* ---------- index des nodes ---------- */
@@ -244,6 +243,17 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
   const badge = s => '<span class="badge">' + esc(s) + '</span>';
   const badge2 = s => '<span class="badge2">' + esc(s) + '</span>';
   const kindLbl = k => ({ active: tri('Actif', 'Active', 'Activo'), passive: tri('Passif', 'Passive', 'Pasivo'), node: 'Node', special: 'Special', ultimate: 'Ultimate', disabled: tri('Désactivé', 'Disabled', 'Desactivado'), unknown: '?' })[k] || k;
+  const buildFinal = (rows, note) =>
+    '<div class="card gold-edge"><h3 class="h3">' + tri('Build final — chaque skill, SON niveau (aucune alternative)', 'Final build — each skill, ITS level (no alternatives)', 'Build final — cada skill, SU nivel') + '</h3>'
+    + '<p class="text-xs opacity-70 mt-1">' + tri('L’ordre d’investissement = l’ordre des lignes. Ressources de montée : fragments d’Ascension (max 6/skill) + vœux Hōgyoku (1er fragment garanti : boss Gelum, fin du tutoriel).', 'Investment order = row order. Leveling resources: Ascension Fragments (max 6/skill) + Hōgyoku wishes (1st fragment guaranteed: Gelum, tutorial).', 'El orden de inversión = el orden de las filas.') + '</p>'
+    + '<div class="tblwrap mt-2"><table class="tbl"><thead><tr><th>#</th><th>Skill</th><th>' + tri('Niveau cible', 'Target level', 'Nivel objetivo') + '</th><th>' + tri('Pourquoi', 'Why', 'Por qué') + '</th></tr></thead><tbody>'
+    + rows.map((r, i) => '<tr class="' + (r[3] ? 'hl' : '') + '"><td class="mono">' + (i + 1) + '</td><td><b>' + esc(r[0]) + '</b></td><td class="mono goldc">' + esc(r[1]) + '</td><td class="text-xs">' + esc(r[2]) + '</td></tr>').join('')
+    + '</tbody></table></div>' + (note ? '<p class="text-xs warnc mt-2">' + esc(note) + '</p>' : '') + '</div>';
+
+  const formsCard = (title, badgeTxt, steps) =>
+    '<div class="card"><h3 class="h3">' + esc(title) + ' ' + badge(badgeTxt) + '</h3><ol class="startol mt-2">'
+    + steps.map(s => '<li class="text-sm">' + esc(s) + '</li>').join('') + '</ol></div>';
+
   const barRow = (label, val, note) =>
     '<div class="mt-3"><div style="display:flex;justify-content:space-between" class="mono text-sm"><b>' + esc(label) + '</b><span class="goldc">' + val + '</span></div>'
     + '<div class="bar"><div class="fill" style="width:' + (val / 4) + '%"></div></div>'
@@ -291,7 +301,7 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
     const iZ = D.iJ.reduce((a, s) => a + (s.sp || 0), 0);
     const attrCard = '<div class="card"><h3 class="h3">' + esc(T('attr_split')) + '</h3>'
       + barRow('KIDŌ', 360, tri('100% du contenu utilisable (théorème du 360) + scaling max', '100% of usable content (360 theorem) + max scaling', '100% del contenido usable + scaling'))
-      + barRow('SPEED', 40, tri('Premiers seuils de mobilité', 'First mobility gates', 'Primeros umbrales de movilidad'))
+      + barRow('SPEED', 40, tri('Pourquoi 40 ici : K360 = plafond utilisable (Prism Seal 370 désactivé) → il RESTE 40 points. Hakuda/Strength ne débloqueraient rien qu’on achète ; l’attribut Speed accélère déplacement + Shunpo (donnée du jeu) = le kite à ~10 m du caster. Seule affectation rentable du reliquat.', 'Why 40 here: K360 = usable ceiling (Prism Seal 370 disabled) → 40 points REMAIN. Hakuda/Strength would gate nothing we buy; the Speed attribute speeds movement + Shunpo (game data) = the caster’s ~10 m kite. The only profitable home for the remainder.', 'Por qué 40: K360 = techo usable → sobran 40 puntos. Speed acelera movimiento + Shunpo = el kiteo del caster.'))
       + barRow('STRENGTH / HAKUDA', 0, tri('Chaque point ici est volé au 360', 'Every point here is stolen from 360', 'Cada punto aquí se roba al 360'))
       + '<p class="text-sm mt-3 opacity-90">' + esc(T('theorem')) + '</p>'
       + '<p class="text-xs mt-2 warnc">' + tri('Replis : 350/50/0 (garde Goryū, perd HCS + essence) · 300/50/50 (méta Sportskeeda, perd les deux nukes gated).', 'Fallbacks: 350/50/0 (keeps Goryū, loses HCS + essence) · 300/50/50 (Sportskeeda meta, loses both gated nukes).', 'Alternativas: 350/50/0 · 300/50/50.') + '</p></div>';
@@ -311,7 +321,7 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
       return '<tr class="' + (D.i0.includes(s.id) ? 'hl' : '') + '"><td><b>' + esc(s.name) + '</b>' + cdline + '</td><td>' + badge2(kindLbl(s.kind)) + '</td><td class="mono goldc">' + s.sp + '</td><td class="mono">K ' + s.gate + '</td><td class="mono">' + max + '</td><td class="text-xs">' + esc(note) + '</td></tr>';
     }).join('');
     const kidoCard = '<div class="card"><h3 class="h3">' + tri('Arbre complet (34 nodes, 208 SP)', 'Full tree (34 nodes, 208 SP)', 'Árbol completo (34 nodos, 208 SP)') + ' ' + badge('PGG 21/06/2026') + '</h3>'
-      + '<div class="tblwrap mt-3"><table class="tbl"><thead><tr><th>' + esc(T('th_skill')) + '</th><th>' + esc(T('th_type')) + '</th><th>' + esc(T('th_sp')) + '</th><th>' + esc(T('th_gate')) + '</th><th>Max</th><th>' + esc(T('th_note')) + '</th></tr></thead><tbody>' + rows
+      + '<div class="tblwrap mt-3"><table class="tbl"><thead><tr><th>' + esc(T('th_skill')) + '</th><th>' + esc(T('th_type')) + '</th><th>' + esc(T('th_sp')) + '</th><th>' + esc(T('th_gate')) + '</th><th>Max</th><th>' + tri('Passifs par palier (info — TES niveaux sont fixés par le « Build final » ci-dessus)', 'Per-tier passives (info — YOUR levels are set by the “Final build” above)', 'Pasivos por nivel (info)') + '</th></tr></thead><tbody>' + rows
       + '<tr><td colspan="2"><b>+ 10 Kido Nodes (scaling)</b></td><td class="mono goldc">2×10</td><td colspan="3" class="mono text-xs">Σ = ' + iZ + ' SP ✓ · ' + tri('cœur surligné = 87 SP + Kurohitsugi 9 + Radiant Edge 4 = 100', 'highlighted core = 87 SP + Kurohitsugi 9 + Radiant Edge 4 = 100', 'núcleo resaltado = 87 + 9 + 4 = 100') + '</td></tr></tbody></table></div>'
       + '<p class="text-xs opacity-70 mt-2">★ ' + tri('palier documenté au-delà du cap 6 (Sai nv.7 « ignore le block » · Hōrin nv.8 « traverse le block ») — chaque palier nécessite UN vœu Hōgyoku (n°1 → Sai, n°2 → Hōrin).', 'documented breakpoint beyond the 6 cap (Sai lv.7 / Hōrin lv.8) — each tier requires ONE Hōgyoku wish (#1 → Sai, #2 → Hōrin).', 'palier más allá del tope 6 — cada uno requiere UN deseo Hōgyoku (n.º1 → Sai).') + '</p></div>';
     const misc = '<div class="card"><h3 class="h3">' + esc(T('misc_title')) + '</h3><div class="tblwrap mt-2"><table class="tbl"><thead><tr><th>' + esc(T('th_skill')) + '</th><th>' + esc(T('th_cash')) + '</th></tr></thead><tbody>'
@@ -320,7 +330,26 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
     const clans = '<div class="card"><h3 class="h3">' + esc(T('clans')) + '</h3><div class="tblwrap mt-2"><table class="tbl"><thead><tr><th>' + esc(T('th_clan')) + '</th><th>' + esc(T('th_rarity')) + '</th><th>' + esc(T('th_bonus')) + '</th></tr></thead><tbody>'
       + D.i5.map(e => '<tr class="' + (e.star ? 'hl' : '') + '"><td><b>' + esc(e.name) + '</b></td><td class="mono text-xs">' + esc(e.rarity) + '</td><td class="text-sm">' + esc(e.bonus) + (e.mm ? ' ' + badge2('?') : '') + '</td></tr>').join('') + '</tbody></table></div>'
       + '<p class="text-xs mt-3 warnc">' + esc(T('ban_note')) + '</p></div>';
-    return '<div class="space-y"><div class="grid2">' + attrCard + buildCard + '</div>' + loadout + kidoCard + '<div class="grid2">' + misc + speed + '</div>' + clans + '</div>';
+    const bf = buildFinal([
+      ['Sai', 'nv.7', tri('vœu Hōgyoku n°1 — « IGNORE LE BLOCK » : la porte du combo. Sans ce palier, pas de build.', 'Hōgyoku wish #1 — “IGNORES BLOCK”: the combo’s gate. No build without this tier.', 'Deseo Hōgyoku n.º1 — «IGNORA EL BLOQUEO».'), true],
+      ['Fushibi (slot 9)', 'nv.3', tri('coupe le dash des piégés — 3 niveaux, PAS plus : chaque niveau au-delà est un point perdu ailleurs', 'cuts trapped dashes — 3 levels, NOT more: anything beyond is wasted elsewhere', 'corta el dash — 3 niveles, NO más')],
+      ['Shō', 'nv.3', tri('« empêche de se relever » — le palier qui verrouille le sol', '“prevents getting up” — the tier that locks the floor', '«impide levantarse»')],
+      ['Byakurai', 'nv.4', tri('after-shock sur le finisher — CD 26,3 s : prêt à CHAQUE rotation de Sai', 'after-shock on the finisher — 26.3s CD: ready EVERY Sai rotation', 'after-shock en el remate')],
+      ['Sekienton', 'nv.6', tri('rushdown derrière la fumée — le dernier investissement du build', 'rushdown behind the smoke — the build’s last investment', 'rushdown tras el humo')],
+      ['Hōrin', 'nv.6', tri('la traction ragdoll est NATIVE — passera nv.8 (traverse-block) au vœu Hōgyoku n°2, rien à faire d’ici là', 'ragdoll pull is NATIVE — goes lv.8 (block-pierce) at Hōgyoku wish #2, nothing to do until then', 'la tracción de ragdoll es NATIVA — nv.8 con el deseo n.º2')],
+      ['Rikujōkōrō · Goryū · HCS · Hainawa', 'nv.1', tri('propriétés natives (bind lourd, nuke, ultime, vol de Rei) — et monter Sai/HCS augmente AUSSI leur coût en Rei par cast : ne monte rien ici', 'native properties (heavy bind, nuke, ultimate, Rei steal) — leveling also RAISES per-cast Rei cost: level nothing here', 'propiedades nativas — no subas nada aquí')],
+      ['Geki · Bind Resist · Reactive Barrier', '—', tri('passifs : pas de niveau à gérer', 'passives: no level to manage', 'pasivos: sin nivel')],
+    ]);
+    const shikai = formsCard(tri('Former ton Shikai — pas à pas, conditions et lieux', 'Forming your Shikai — step by step, conditions & places', 'Formar tu Shikai — paso a paso'), tri('vérifié web 10/07/2026', 'web-checked Jul 10, 2026', 'verificado 10/07/2026'), [
+      tri('Nv.25 → la méditation se débloque : touche L (manette : L2/LT + bas). Ta PREMIÈRE méditation déclenche une aura verte : la progression Shikai commence.', 'Lv.25 → meditation unlocks: L key (controller: L2/LT + down). Your FIRST meditation triggers a green aura: Shikai progression starts.', 'Nv.25 → meditación (tecla L). La primera meditación = aura verde.'),
+      tri('Des « Spirit Whispers » (une ligne au-dessus de ta barre de PV) apparaissent en jouant (quêtes, missions, combat). À CHAQUE whisper : médite immédiatement — c’est de l’EXP de Shikai. Les ignorer ralentit tout.', '“Spirit Whispers” (a one-liner above your HP bar) appear while playing (quests, missions, combat). At EACH whisper: meditate immediately — that’s Shikai EXP. Ignoring them slows everything.', 'Los «Spirit Whispers» aparecen jugando → medita de inmediato (EXP de Shikai).'),
+      tri('Monde Intérieur, étape 1 — les CLOCHES : dans le vide blanc, suis les orbes bleues jusqu’aux cloches blanches ; résous l’énigme ou bats le PNJ. Réponses EXACTES : « An Echo » (je ne parle pas mais réponds toujours) · « A Promise » (se brise sans être tenu) · « The Future » (devant toi mais invisible). Cloche résolue = bleue, progrès SAUVEGARDÉ ; échec = retour au monde réel, tu retentes.', 'Inner World, step 1 — the BELLS: in the white void, follow blue orbs to white bells; solve the riddle or beat the NPC. EXACT answers: “An Echo” · “A Promise” · “The Future”. Solved bell = blue, progress SAVED; failure = back to the real world, retry.', 'Mundo Interior, paso 1 — las CAMPANAS: respuestas: «An Echo» · «A Promise» · «The Future».'),
+      tri('Étape 2 — le BROUILLARD : re-médite → le Monde Intérieur est embrumé. Monte au nv.35 via la quête principale, puis médite encore : le brouillard se lève.', 'Step 2 — the FOG: meditate again → the Inner World is fogged. Reach lv.35 via the main quest, then meditate again: the fog lifts.', 'Paso 2 — la NIEBLA: sube a nv.35 y medita de nuevo.'),
+      tri('Étape 3 — le BOSS (pas de spawn fixe, cherche le PNJ Shikai) : 3 phases — Base (il utilise TES skills et passifs : un build brouillon = un combat brouillon) → 2ᵉ forme (moves uniques + tes capacités) → forme FINALE (régénère 4 barres de PV et change d’arme). C’est un test de DPS : viens avec tes skills montés. Bats-le puis EXÉCUTE-le → Arme Shikai.', 'Step 3 — the BOSS (no fixed spawn, find the Shikai NPC): 3 phases — Base (uses YOUR skills/passives) → 2nd form (unique moves + your kit) → FINAL form (regenerates 4 HP bars, swaps weapon). It’s a DPS check: come with leveled skills. Beat it then EXECUTE it → Shikai Weapon.', 'Paso 3 — el JEFE: 3 fases; la final regenera 4 barras. Ejecútalo → Arma Shikai.'),
+      tri('Utilisation : MAINTIENS E pour dégainer le Shikai en combat. Reroll : médite + interagis avec la silhouette de l’arme dans le vide blanc → onglet Ability (Ability Rerolls ; code UPD2 = 20). Jette Waypoint ; garde Ice/Red Ice, Senbonzakura (KATANA uniquement) ou Blooming Madness (~1 %).', 'Usage: HOLD E to draw the Shikai in combat. Reroll: meditate + interact with the weapon silhouette in the void → Ability tab (Ability Rerolls; UPD2 code = 20). Dump Waypoint; keep Ice/Red Ice, Senbonzakura (KATANA only) or Blooming Madness (~1%).', 'MANTÉN E para desenvainar. Reroll: pestaña Ability (UPD2 = 20 rerolls).'),
+      tri('Monte-le : paliers Ice vérifiés — Dégâts nv.4/6 · Reiatsu nv.9/10 · Rate nv.5/6. Le Sanctuaire d’Amélioration (chaîne Pratz/Rose/Lord Nivis, Arctic Plains) = +2 niveaux gratuits, UNE fois. Bankai : annoncé (Blade Realm), PAS encore en jeu.', 'Level it: verified Ice breakpoints — Damage lv.4/6 · Reiatsu lv.9/10 · Rate lv.5/6. The Upgrade Shrine (Pratz/Rose/Lord Nivis chain, Arctic Plains) = +2 free levels, ONCE. Bankai: announced (Blade Realm), NOT in game yet.', 'Hitos de Ice: Daño 4/6 · Reiatsu 9/10 · Rate 5/6. Bankai: aún NO está en el juego.'),
+    ]);
+    return '<div class="space-y"><div class="grid2">' + attrCard + buildCard + '</div>' + loadout + bf + shikai + kidoCard + '<div class="grid2">' + misc + speed + '</div>' + clans + '</div>';
   }
 
   function pageQuincy() {
@@ -336,7 +365,35 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
     const schrift = '<div class="card"><h3 class="h3">' + esc(T('releases')) + ' — Schrift</h3><div class="tblwrap mt-2"><table class="tbl"><thead><tr><th>Schrift</th><th>' + esc(T('th_tier')) + '</th><th>Note</th></tr></thead><tbody>'
       + D.i8.map(e => '<tr class="' + (e.tier === 'S' ? 'hl' : '') + '"><td><b>' + esc(e.name) + '</b></td><td class="mono">' + esc(e.tier) + '</td><td class="text-sm">' + esc(e.note) + '</td></tr>').join('') + '</tbody></table></div>'
       + '<p class="text-xs mt-3 opacity-80">' + esc(T('clans')) + ' : ' + esc(D.i4.map(e => e.name + ' (' + e.bonus + ')').join(' · ')) + '</p></div>';
-    return '<div class="space-y"><div class="grid2">' + meta + prog + '</div>' + schrift + '</div>';
+    const attrCard = '<div class="card"><h3 class="h3">' + esc(T('attr_split')) + '</h3>'
+      + barRow('SPEED', 300, tri('Le moteur : seuil de l’essence Splitting Standstill (Sp300) + l’attribut accélère déplacement/Shunpo/tempo — l’identité du build', 'The engine: Splitting Standstill essence gate (Sp300) + the attribute speeds movement/Shunpo/tempo — the build’s identity', 'El motor: umbral de la esencia (Sp300) + movimiento/Shunpo'))
+      + barRow('KIDŌ', 100, tri('La dernière marche utile SOUS l’essence : Blut Arterie (60) · Blut Vene (90) · Luftpfeile (96) · Reishi Flash & Reishi Gather (100). K124 (Stille Silber) coûterait l’essence : 276+124 = 400 mais Sp<300.', 'The last useful step UNDER the essence: Blut Arterie (60) · Blut Vene (90) · Luftpfeile (96) · Reishi Flash & Gather (100). K124 (Stille Silber) would cost the essence.', 'El último escalón útil BAJO la esencia: K60–K100.'))
+      + barRow('STRENGTH / HAKUDA', 0, tri('Chaque point ici est volé au moteur — prouvé au Labo (onglet Combos)', 'Every point here is stolen from the engine — proven in the Lab (Combos tab)', 'Cada punto aquí se roba al motor'))
+      + '<p class="text-xs mt-3 warnc">' + tri('Total : 300 + 100 = 400 pile (plafond du jeu). La v9 « full Speed » était incohérente : Blut Arterie exige K60.', 'Total: 300 + 100 = exactly 400 (game cap). v9 “full Speed” was inconsistent: Blut Arterie needs K60.', 'Total: 400 exactos. El «full Speed» de la v9 era incoherente.') + '</p></div>';
+    const buildCard = '<div class="card"><h3 class="h3">' + esc(T('build_split')) + '</h3>'
+      + barRow('POTENCY', 150, tri('Efficacité des skills (donnée du jeu) — c’est le burst des volées', 'Ability effectiveness (game data) — the volleys’ burst', 'Eficacia de skills — el burst'))
+      + barRow('HASTE', 150, tri('Baisse les cooldowns : le tempo EST le plan de jeu — plus de volées, plus d’openers', 'Lowers cooldowns: tempo IS the gameplan — more volleys, more openers', 'Baja los CD: el tempo ES el plan'))
+      + barRow('RESERVES', 100, tri('3–4 skills par volée sans s’assécher — complété par Reishi Gather (+7,5 % régén, K100)', '3–4 skills per volley without running dry — plus Reishi Gather (+7.5% regen, K100)', '3–4 skills por ráfaga sin secarse'))
+      + barRow('METTLE / SHUNPO', 0, tri('La mobilité vient déjà du Speed 300 ; le build « inflige et encaisse à parts égales » (source méta)', 'Mobility already comes from Speed 300; the build “deals and receives in equal measure” (meta source)', 'La movilidad ya viene del Speed 300'))
+      + '<p class="text-xs mt-3 opacity-70">' + tri('Rôles des 5 stats = données officielles (Trello). Cette répartition 150/150/100 est NOTRE dérivation calculée — aucune source ne publie de Build Points Quincy.', 'The 5 stat roles = official data (Trello). This 150/150/100 split is OUR computed derivation — no source publishes Quincy Build Points.', 'Los roles de las 5 stats son oficiales; el reparto 150/150/100 es nuestra derivación.') + '</p></div>';
+    const bf = buildFinal([
+      ['Blut Arterie', 'nv.8', tri('LE vœu Hōgyoku Quincy — « +15 % arme SANS drain ». Avant le vœu : reste nv.1 et joue-la par fenêtres courtes (bascule Blut Vene quand la jauge tire).', 'THE Quincy Hōgyoku wish — “+15% weapon, NO drain”. Before the wish: stay lv.1 and run short windows (swap to Blut Vene when the gauge drains).', 'EL deseo Hōgyoku Quincy — «+15% arma SIN drenaje».'), true],
+      ['Blade Flow', tri('6 fragments', '6 fragments', '6 fragmentos'), tri('finisher n°1 — les fragments d’Ascension (max 6/skill) vont ICI en premier', 'finisher #1 — Ascension Fragments (max 6/skill) go HERE first', 'finisher n.º1 — fragmentos aquí primero'), true],
+      ['Flash Execute', tri('6 fragments', '6 fragments', '6 fragmentos'), tri('finisher n°2 — après Blade Flow', 'finisher #2 — after Blade Flow', 'finisher n.º2')],
+      ['Vortex Edge · False Cutter · Clone Strike · Flash Surprise', 'nv.1', tri('la volée est native — aucune propriété gated par niveau documentée sur ces skills', 'the volley is native — no documented level-gated property on these skills', 'la ráfaga es nativa')],
+      ['Reishi Flash · Luftpfeile · Blut Vene · Reishi Gather', 'nv.1', tri('aveugle / volée de flèches / défense / régén : utiles dès le premier niveau', 'blind / arrow volley / defense / regen: useful from level 1', 'útiles desde el nivel 1')],
+      ['Stille Silber (variante B uniquement)', 'nv.5', tri('le palier « désactive la transformation » est EXACTEMENT nv.5 — pas un de plus', 'the “disables transformation” tier is EXACTLY lv.5 — not one more', 'EXACTAMENTE nv.5')],
+    ]);
+    const schriftGuide = formsCard(tri('Former ton Schrift (+ Letzt Stil) — pas à pas, conditions et lieux', 'Forming your Schrift (+ Letzt Stil) — step by step', 'Formar tu Schrift — paso a paso'), tri('vérifié web 10/07/2026', 'web-checked Jul 10, 2026', 'verificado 10/07/2026'), [
+      tri('Nv.25 : reçois le grade Soldat Cap auprès du commandement Wandenreich — la porte de toute la progression Quincy.', 'Lv.25: receive the Soldat Cap rank from Wandenreich command — the gate to all Quincy progression.', 'Nv.25: rango Soldat Cap (Wandenreich).'),
+      tri('Missions du Lieutenant : touche L → tableau de missions (1★ à 3★ — plus d’étoiles = plus d’EXP de progression). CRUCIAL : après CHAQUE mission, retourne parler au Lieutenant → « Report task » pour encaisser l’EXP.', 'Lieutenant missions: L key → mission board (1★–3★ — more stars = more progression EXP). CRUCIAL: after EACH mission, return to the Lieutenant → “Report task” to bank the EXP.', 'Misiones del Lieutenant (L). Tras CADA misión: «Report task».'),
+      tri('Sanrei Glove : quand le Lieutenant le demande, achète la recette au PNJ Wandenreich (300 Soul Tokens) + rassemble 1 Broken Quincy Medallion · 1 Frost Alloy · 2 Strange Essences → craft le gant.', 'Sanrei Glove: when the Lieutenant prompts it, buy the recipe from the Wandenreich NPC (300 Soul Tokens) + gather 1 Broken Quincy Medallion · 1 Frost Alloy · 2 Strange Essences → craft the glove.', 'Sanrei Glove: receta 300 Soul Tokens + 1 Broken Quincy Medallion · 1 Frost Alloy · 2 Strange Essences.'),
+      tri('Méditations : gant équipé, fais 3 à 5 méditations à 70+ de Reiatsu max — médite (L), laisse la jauge se VIDER complètement, laisse-la remonter, recommence (en parallèle des missions).', 'Meditations: glove equipped, do 3 to 5 meditations at 70+ max Reiatsu — meditate (L), let the gauge DRAIN fully, let it recover, repeat (alongside missions).', 'Meditaciones: 3–5 con 70+ de Reiatsu máx, dejando vaciar la barra.'),
+      tri('Boss Securis (Arctic Plains) : pattern apprenable, fragile une fois lu. Déclenche Letzt Stil PENDANT le combat : il restaure des PV. ~20 essais à l’aveugle = normal, ne lâche pas.', 'Securis boss (Arctic Plains): learnable pattern, squishy once read. Pop Letzt Stil DURING the fight: it restores HP. ~20 blind attempts = normal, don’t give up.', 'Jefe Securis (Arctic Plains). Activa Letzt Stil DURANTE el combate (restaura PV).'),
+      tri('Après le boss : ~3 missions finales (2★–3★ ; les Menos Grande sont des stat-checks faciles à ce stade). Quand le Lieutenant dit « You have fully understood this power… » → Schrift + Letzt Stil débloqués, avec 5 rerolls OFFERTS au premier déblocage.', 'After the boss: ~3 final missions (2★–3★; Menos Grande are easy stat-checks by now). When the Lieutenant says “You have fully understood this power…” → Schrift + Letzt Stil unlocked, with 5 FREE rerolls on first unlock.', 'Tras el jefe: ~3 misiones finales → Schrift + Letzt Stil + 5 rerolls GRATIS.'),
+      tri('Reroll vers : The Superstar (~1 %, revive de James — le meilleur), sinon Thunderbolt (dégâts) ou Necromancer (utilité). Pas de Vollständig en jeu à ce jour. Le Blut au quotidien : Arterie AVANT une volée, Vene quand tu encaisses (skills de l’arbre, K60/K90).', 'Reroll toward: The Superstar (~1%, James revive — the best), else Thunderbolt (damage) or Necromancer (utility). No Vollständig in game yet. Daily Blut: Arterie BEFORE a volley, Vene when tanking (tree skills, K60/K90).', 'Reroll hacia: The Superstar (~1%), si no Thunderbolt/Necromancer. Sin Vollständig.'),
+    ]);
+    return '<div class="space-y"><div class="grid2">' + attrCard + buildCard + '</div><div class="grid2">' + meta + prog + '</div>' + bf + schriftGuide + schrift + '</div>';
   }
 
   function pageHollow() {
@@ -352,7 +409,36 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
     const resu = '<div class="card"><h3 class="h3">' + esc(T('releases')) + ' — Resurrección</h3><div class="tblwrap mt-2"><table class="tbl"><thead><tr><th>Resurrección</th><th>' + esc(T('th_tier')) + '</th><th>Note</th></tr></thead><tbody>'
       + D.i9.map(e => '<tr class="' + (e.tier === 'S' ? 'hl' : '') + '"><td><b>' + esc(e.name) + '</b></td><td class="mono">' + esc(e.tier) + '</td><td class="text-sm">' + esc(e.note) + '</td></tr>').join('') + '</tbody></table></div>'
       + '<p class="text-xs mt-3 opacity-80">' + esc(T('clans')) + ' : ' + esc(D.i6.map(e => e.name + ' (' + e.bonus + ')').join(' · ')) + '</p></div>';
-    return '<div class="space-y"><div class="grid2">' + meta + prog + '</div>' + resu + '</div>';
+    const attrCard = '<div class="card"><h3 class="h3">' + esc(T('attr_split')) + '</h3>'
+      + barRow('KIDŌ', 325, tri('Psycho Crash (K325) = le dernier seuil du combo — et K325 scale TOUTE l’artillerie : Bala, Ripcord, Cero (Ultra Power K225 ✓), le Finger Cero de Zero Clutch', 'Psycho Crash (K325) = the combo’s last gate — and K325 scales ALL the artillery: Bala, Ripcord, Cero (Ultra Power K225 ✓), Zero Clutch’s Finger Cero', 'Psycho Crash (K325) = el último umbral; escala toda la artillería'))
+      + barRow('HAKUDA', 56, tri('Dragon Lash (H56) — le re-stun qui vaut +49 % d’espérance de dégâts sur la string (calcul au Labo)', 'Dragon Lash (H56) — the re-stun worth +49% expected string damage (Lab math)', 'Dragon Lash (H56) — el re-stun (+49%)'))
+      + barRow('SPEED', 19, tri('Le reliquat EXACT : 400 − 325 − 56 = 19. Ajouter Hard Pressure (H76) ferait 401 — raté à UN point (prouvé au Labo). Speed accélère un peu déplacement/Shunpo.', 'The EXACT remainder: 400 − 325 − 56 = 19. Adding Hard Pressure (H76) would make 401 — missed by ONE point (Lab proof). Speed slightly speeds movement/Shunpo.', 'El resto EXACTO: 400−325−56 = 19.'))
+      + '<p class="text-xs mt-3 warnc">' + tri('Total : 325 + 56 + 19 = 400 pile. Variante pression (Suplex) : Hakuda 115 / Strength 28 / Kidō 182 — mais elle abandonne les DEUX exécutions.', 'Total: 325 + 56 + 19 = exactly 400. Pressure variant (Suplex): Hakuda 115 / Strength 28 / Kido 182 — but it gives up BOTH executions.', 'Total: 400 exactos. Variante Suplex: H115/S28/K182.') + '</p></div>';
+    const buildCard = '<div class="card"><h3 class="h3">' + esc(T('build_split')) + '</h3>'
+      + barRow('METTLE', 150, tri('Tu vis au corps-à-corps : posture max (donnée du jeu) — synergie directe avec Iron Skin (+35 % régén posture)', 'You live in melee: max posture (game data) — direct synergy with Iron Skin (+35% posture regen)', 'Vives en melé: postura máx (sinergia Iron Skin)'))
+      + barRow('POTENCY', 150, tri('Efficacité des skills : scale Cero, Bala, Ripcord et les exécutions', 'Ability effectiveness: scales Cero, Bala, Ripcord and the executes', 'Eficacia de skills'))
+      + barRow('HASTE', 100, tri('Ripcord et Zero Clutch plus souvent = plus d’ouvertures imparables', 'Ripcord and Zero Clutch more often = more unparryable openings', 'Ripcord y Zero Clutch más a menudo'))
+      + barRow('RESERVES / SHUNPO', 0, tri('Fiche du hub : « peu de Reiatsu, surtout stamina/posture » — et Wings recolle déjà la distance', 'Hub scorecard: “low Reiatsu, mostly stamina/posture” — and Wings already closes the gap', '«poco Reiatsu» — y Wings ya recorta la distancia'))
+      + '<p class="text-xs mt-3 opacity-70">' + tri('Rôles des 5 stats = données officielles (Trello). Cette répartition 150/150/100 est NOTRE dérivation calculée — aucune source ne publie de Build Points Hollow.', 'The 5 stat roles = official data (Trello). This 150/150/100 split is OUR computed derivation — no source publishes Hollow Build Points.', 'Reparto 150/150/100 = nuestra derivación.') + '</p></div>';
+    const bf = buildFinal([
+      ['Bala Ripcord', 'nv.6', tri('l’opener imparable N’EXISTE qu’à ce palier : traverse le block + tire la cible à toi', 'the unparryable opener ONLY exists at this tier: pierces block + yanks the target to you', 'el opener imparable SOLO existe en nv.6'), true],
+      ['Zero Clutch', 'nv.6', tri('l’auto-exécution en saisie = le palier nv.6', 'the grab auto-execute = the lv.6 tier', 'la auto-ejecución = nv.6'), true],
+      ['Cero', tri('nv.1 + variante Ultra Power', 'lv.1 + Ultra Power variant', 'nv.1 + Ultra Power'), tri('la puissance vient du nœud de CHOIX Ultra Power (K225 ✓), pas d’un niveau — burst massif, startup assumé', 'the power comes from the Ultra Power CHOICE node (K225 ✓), not a level — massive burst, accepted startup', 'la potencia viene del nodo Ultra Power (K225)')],
+      ['Dragon Lash · Psycho Crash', 'nv.1', tri('gros stun / ignore les i-frames de ragdoll : propriétés NATIVES, rien à monter', 'big stun / ignores ragdoll i-frames: NATIVE properties, nothing to level', 'propiedades NATIVAS')],
+      ['Bala Blaster · Finger Cero · Hollow Cutter · Cero Armor · Cero Absorption', 'nv.1', tri('chemins de prérequis vers Ripcord/Clutch/Psycho — on les achète, on ne les monte pas', 'prerequisite paths to Ripcord/Clutch/Psycho — buy them, don’t level them', 'caminos de prerrequisito')],
+      ['LE vœu Hōgyoku', tri('à GARDER', 'KEEP it', 'GUÁRDALO'), tri('aucun palier nv.7–8 documenté côté Hollow : ne le dépense pas sur une promesse non vérifiée', 'no documented lv.7–8 tier on the Hollow side: don’t spend it on an unverified promise', 'sin palier documentado: no lo gastes')],
+    ]);
+    const resuGuide = formsCard(tri('Former ta Resurrección — pas à pas, conditions et lieux', 'Forming your Resurrección — step by step', 'Formar tu Resurrección — paso a paso'), tri('vérifié web 10/07/2026', 'web-checked Jul 10, 2026', 'verificado 10/07/2026'), [
+      tri('Fishbone (2 slots de traits) : atteins le nv.7 → tu peux évoluer en Menos.', 'Fishbone (2 trait slots): reach lv.7 → you can evolve into Menos.', 'Fishbone (2 ranuras): nv.7 → Menos.'),
+      tri('Menos : remplis les objectifs AFFICHÉS À L’ÉCRAN (destruction d’objets + kills de Hollows) → Adjuchas (3 slots).', 'Menos: complete the ON-SCREEN objectives (object destruction + Hollow kills) → Adjuchas (3 slots).', 'Menos: objetivos en pantalla → Adjuchas (3 ranuras).'),
+      tri('Adjuchas : 8 Hollows + 60 objets détruits, puis 70 points PK — SEULS les Shinigami et Quincy comptent pour les PK (PAS les Arrancars : ne perds pas ton temps dessus) → VASTO LORDE (4 slots).', 'Adjuchas: 8 Hollows + 60 destroyed objects, then 70 PK points — ONLY Shinigami and Quincy count for PK (NOT Arrancars: don’t waste time on them) → VASTO LORDE (4 slots).', 'Adjuchas: 8 Hollows + 60 objetos, luego 70 PK (solo Shinigami/Quincy cuentan) → VASTO LORDE.'),
+      tri('Les traits en chemin : DÉVORE les Hollows vaincus — chaque consommation peut proposer un trait (tu peux refuser). Cible les 4 du build : Iron Skin · Deadly Claws · Wings · Dense Muscles.', 'Traits along the way: CONSUME defeated Hollows — each consumption may offer a trait (you can decline). Target the build’s 4: Iron Skin · Deadly Claws · Wings · Dense Muscles.', 'DEVORA Hollows para tus rasgos: Iron Skin · Deadly Claws · Wings · Dense Muscles.'),
+      tri('RÈGLE ABSOLUE : ne retire JAMAIS le masque avant Vasto Lorde — tu perdrais le 4ᵉ slot de traits À JAMAIS et ta partial res serait retardée après le nv.25.', 'ABSOLUTE RULE: NEVER unmask before Vasto Lorde — you’d lose the 4th trait slot FOREVER and your partial res would be delayed past lv.25.', 'REGLA ABSOLUTA: NUNCA te quites la máscara antes de Vasto Lorde.'),
+      tri('Vasto atteint : touche L → retire le masque → tu deviens Arrancar et tu choisis une ARME (Spear conseillée pour débuter ; tes 4 traits Vasto restent actifs — c’est tout l’intérêt d’avoir attendu).', 'At Vasto: L key → unmask → you become Arrancar and pick a WEAPON (Spear suggested to start; your 4 Vasto traits stay active — the whole point of waiting).', 'En Vasto: L → Arrancar + ARMA (Spear). Tus 4 rasgos siguen activos.'),
+      tri('Resurrección : Arrancar nv.25+, équipe l’arme puis médite (L) → Monde Intérieur = GAUNTLET de tes formes passées (Fishbone → Menos Grande → Adjuchas). Nettoie toutes les vagues → Resurrección. Reroll : cible Shark (le moins situationnel), sinon Praying Mantis (barrière 360°) ou Luminosity (hybride).', 'Resurrección: Arrancar lv.25+, equip the weapon then meditate (L) → Inner World = GAUNTLET of your past forms (Fishbone → Menos Grande → Adjuchas). Clear all waves → Resurrección. Reroll: target Shark (least situational), else Praying Mantis (360° barrier) or Luminosity (hybrid).', 'Resurrección: Arrancar nv.25+, medita (L) → GAUNTLET de tus formas pasadas → Resurrección. Objetivo: Shark.'),
+      tri('ATTENTION : les essences consommées (Gran Ray Cero, Kurikara…) ne reviennent JAMAIS, même après un reset complet — n’en consomme qu’en toute certitude.', 'WARNING: consumed essences (Gran Ray Cero, Kurikara…) NEVER come back, even after a full reset — consume only when certain.', 'OJO: las esencias consumidas NUNCA vuelven.'),
+    ]);
+    return '<div class="space-y"><div class="grid2">' + attrCard + buildCard + '</div><div class="grid2">' + meta + prog + '</div>' + bf + resuGuide + resu + '</div>';
   }
 
   /* ---------- combos ---------- */
@@ -453,22 +539,67 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
       + '<div class="nact">' + btn + lvlCtl + '</div></div>';
   }
 
-  function kidoSvg() {
-    const xs = D.iJ.map(n => n.x), ys = D.iJ.map(n => n.y);
-    const minX = Math.min(...xs) - 60, maxX = Math.max(...xs) + 60, minY = Math.min(...ys) - 40, maxY = Math.max(...ys) + 40;
-    let lines = '', dots = '';
-    for (const n of D.iJ) {
-      if (n.parent) { const p = D.iJ.find(x => x.id === n.parent); if (p) lines += '<line x1="' + p.x + '" y1="' + p.y + '" x2="' + n.x + '" y2="' + n.y + '" stroke="' + (SIM.owned.has(n.id) && SIM.owned.has(p.id) ? 'rgba(232,193,90,.7)' : '#232a38') + '" stroke-width="1.5"/>'; }
+  /* Les 8 arbres du simulateur */
+  const TREES = [
+    { id: 'kido', label: 'Shinigami (Kidō)', nodes: D.iJ, own: true, meta: '208 SP · 34 skills · Kidō 28→370' },
+    { id: 'quincy', label: 'Quincy', nodes: D.sl.quincy.nodes, meta: D.sl.quincy.totalSp + ' SP · ' + D.sl.quincy.count + ' skills · ' + D.sl.quincy.gates },
+    { id: 'hollow', label: 'Hollow', nodes: D.sl.hollow.nodes, meta: D.sl.hollow.totalSp + ' SP · ' + D.sl.hollow.count + ' skills · ' + D.sl.hollow.gates },
+  ].concat(D.su.map(t => ({ id: t.id, label: t.label, nodes: t.nodes, meta: (t.totalSp != null ? t.totalSp + ' SP · ' : '') + t.count + ' skills' + (t.gates ? ' · ' + t.gates : '') })));
+
+  // layout automatique (arbres sans coordonnées) : x = profondeur, y = rangée de feuille
+  function treeLayout(nodes) {
+    const byId = new Map(nodes.map(n => [n.id, n]));
+    const kids = new Map(), roots = [];
+    for (const n of nodes) {
+      const p = parentOf(n);
+      if (p && byId.has(p)) { if (!kids.has(p)) kids.set(p, []); kids.get(p).push(n.id); }
+      else roots.push(n.id);
     }
-    for (const n of D.iJ) {
+    const pos = new Map(); let row = 0;
+    (function place(ids, d) {
+      for (const id of ids) {
+        const ks = kids.get(id) || [];
+        if (!ks.length) { pos.set(id, { x: d, y: row++ }); }
+        else {
+          place(ks, d + 1);
+          const ys = ks.map(k => pos.get(k).y);
+          pos.set(id, { x: d, y: (Math.min(...ys) + Math.max(...ys)) / 2 });
+        }
+      }
+    })(roots, 0);
+    return pos;
+  }
+
+  function treeSvg(tree) {
+    const nodes = tree.nodes.filter(n => n.kind !== 'unknown');
+    let coord;
+    if (tree.own) coord = id => { const n = nodes.find(x => x.id === id); return { px: n.x, py: n.y }; };
+    else {
+      const pos = treeLayout(nodes);
+      coord = id => { const p = pos.get(id) || { x: 0, y: 0 }; return { px: 70 + p.x * 170, py: 30 + p.y * 48 }; };
+    }
+    let maxX = 0, maxY = 0, minX = 1e9, minY = 1e9;
+    for (const n of nodes) { const c = coord(n.id); maxX = Math.max(maxX, c.px); maxY = Math.max(maxY, c.py); minX = Math.min(minX, c.px); minY = Math.min(minY, c.py); }
+    let lines = '', dots = '';
+    for (const n of nodes) {
+      const p = parentOf(n);
+      if (p && nodes.some(x => x.id === p)) {
+        const a = coord(p), b = coord(n.id);
+        lines += '<line x1="' + a.px + '" y1="' + a.py + '" x2="' + b.px + '" y2="' + b.py + '" stroke="' + (SIM.owned.has(n.id) && SIM.owned.has(p) ? 'rgba(232,193,90,.7)' : '#232a38') + '" stroke-width="1.5"/>';
+      }
+    }
+    for (const n of nodes) {
+      const c = coord(n.id);
       const owned = SIM.owned.has(n.id), sel = SIM.sel === n.id;
       const r = n.kind === 'ultimate' ? 11 : n.kind === 'special' ? 9 : n.kind === 'node' ? 4.5 : 7;
       const fill = n.kind === 'disabled' ? '#3a2b2b' : owned ? '#e8c15a' : canBuy(n) ? '#2b3446' : '#161b26';
       const stroke = sel ? '#fff' : owned ? '#e8c15a' : '#3a4356';
-      dots += '<circle data-act="knode" data-id="' + n.id + '" cx="' + n.x + '" cy="' + n.y + '" r="' + r + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.6"/>'
-        + (n.kind !== 'node' ? '<text x="' + (n.x + 12) + '" y="' + (n.y + 4) + '" font-size="9.5" fill="' + (owned ? '#e8c15a' : '#9aa1ad') + '" font-family="IBM Plex Mono">' + esc(n.name) + '</text>' : '');
+      const label = n.name || n.n || '';
+      dots += '<circle data-act="knode" data-id="' + n.id + '" cx="' + c.px + '" cy="' + c.py + '" r="' + r + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1.6"/>'
+        + (n.kind !== 'node' ? '<text x="' + (c.px + 12) + '" y="' + (c.py + 4) + '" font-size="9.5" fill="' + (owned ? '#e8c15a' : '#9aa1ad') + '" font-family="IBM Plex Mono">' + esc(label) + '</text>' : '');
     }
-    return '<svg class="kmap" viewBox="' + minX + ' ' + minY + ' ' + (maxX - minX) + ' ' + (maxY - minY) + '" height="430">' + lines + dots + '</svg>';
+    const pad = 60;
+    return '<div style="overflow:auto"><svg class="kmap" viewBox="' + (minX - pad) + ' ' + (minY - 40) + ' ' + (maxX - minX + 2 * pad + 130) + ' ' + (maxY - minY + 80) + '" style="min-width:' + Math.max(700, (maxX - minX) + 260) + 'px" height="' + Math.max(300, Math.min(720, maxY - minY + 90)) + '">' + lines + dots + '</svg></div>';
   }
 
   function pageTree() {
@@ -484,29 +615,25 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
       + '<button class="btn-ghost" data-act="export">' + tri('Copier le build', 'Copy build', 'Copiar build') + '</button></div>'
       + '</div>'
       + (SIM.bar.length ? '<div class="card mt-3"><p class="lab">' + tri('Barre 1–9', 'Bar 1–9', 'Barra 1–9') + '</p><div class="flexwrap mt-2">' + SIM.bar.map((id, i) => '<span class="cstep gold">' + (i + 1) + ' · ' + esc(nName(id)) + '</span>').join('') + '</div></div>' : '');
-    const raceTabs = ['shinigami', 'quincy', 'hollow'].map(r => '<button class="tabbtn ' + (SIM.raceTab === r ? 'on' : '') + '" data-act="srace" data-r="' + r + '">' + (r === 'shinigami' ? 'Shinigami (Kidō)' : r === 'quincy' ? 'Quincy' : 'Hollow') + '</button>').join('');
-    let raceView = '';
-    if (SIM.raceTab === 'shinigami') {
-      const sel = SIM.sel ? D.iJ.find(n => n.id === SIM.sel) : null;
-      raceView = kidoSvg() + (sel ? '<div class="mt-3">' + nodeCard(sel) + '</div>' : '<p class="text-xs opacity-60 mt-2">' + tri('Clique un node de la carte pour le lire / l’acheter.', 'Click a map node to read / buy it.', 'Haz clic en un nodo del mapa.') + '</p>');
-    } else {
-      const tr = D.sl[SIM.raceTab];
-      raceView = '<p class="text-sm opacity-80 mb-2 mt-1 mono">' + esc(tr.label) + ' · ' + tr.totalSp + ' SP · ' + tr.count + ' skills · ' + esc(tr.gates) + '</p><div class="nodelist" style="padding:0">' + tr.nodes.map(nodeCard).join('') + '</div>';
-    }
-    const raceCard = '<div class="card mt-3"><div class="flexwrap">' + raceTabs + '</div><div class="mt-3">' + raceView + '</div></div>';
-    const branches = D.su.map(t => {
-      const open = SIM.open.has(t.id) ? ' open' : '';
-      return '<details class="branch" data-branch="' + t.id + '"' + open + '><summary>' + esc(t.label)
-        + ' <span class="mono text-xs opacity-60">' + (t.totalSp != null ? t.totalSp + ' SP · ' : '') + t.count + ' skills</span>'
-        + (t.tier ? badge('Tier ' + t.tier) : '') + '<span class="mono text-xs opacity-60">' + esc(t.gates || '') + '</span></summary>'
-        + '<div class="nodelist">' + t.nodes.filter(n => n.kind !== 'unknown').map(nodeCard).join('') + '</div></details>';
-    }).join('');
+    const treeTabs = TREES.map(t => '<button class="tabbtn ' + (SIM.tree === t.id ? 'on' : '') + '" data-act="stree" data-t="' + t.id + '">' + esc(t.label) + '</button>').join('');
+    const tree = TREES.find(t => t.id === SIM.tree) || TREES[0];
+    const selEntry = SIM.sel ? NODE.get(SIM.sel) : null;
+    const selPanel = selEntry && tree.nodes.some(n => n.id === SIM.sel)
+      ? '<div class="mt-3">' + nodeCard(selEntry.n) + '</div>'
+      : '<p class="text-xs opacity-60 mt-2">' + tri('Clique un node de la carte pour le lire, l’acheter, monter son niveau, le mettre en barre ou lui donner le Hōgyoku.', 'Click a map node to read it, buy it, level it, slot it on the bar or give it the Hōgyoku.', 'Haz clic en un nodo del mapa para leerlo y comprarlo.') + '</p>';
+    const unknownCount = tree.nodes.filter(n => n.kind === 'unknown').length;
+    const speedNote = tree.id === 'speed'
+      ? '<p class="text-xs warnc mt-2">' + tri('Coûts et seuils de l’arbre Speed NON publiés — ils se lisent en jeu (menu M). Les 12 skills nommés sont affichés en lecture seule' + (unknownCount ? ' ; ' + unknownCount + ' nodes non documentés masqués' : '') + '.', 'Speed tree costs/gates are unpublished — read them in game (M menu). The 12 named skills are read-only' + (unknownCount ? '; ' + unknownCount + ' undocumented nodes hidden' : '') + '.', 'Costes del árbol Speed sin publicar (menú M).') + '</p>'
+      : (unknownCount ? '<p class="text-xs opacity-60 mt-2">' + unknownCount + ' ' + tri('nodes non documentés masqués (données non publiées).', 'undocumented nodes hidden (unpublished data).', 'nodos sin documentar ocultos.') + '</p>' : '');
+    const raceCard = '<div class="card mt-3"><div class="flexwrap">' + treeTabs + '</div>'
+      + '<p class="text-sm opacity-80 mt-3 mono">' + esc(tree.label) + ' · ' + esc(tree.meta) + '</p>'
+      + '<div class="mt-2">' + treeSvg(tree) + '</div>' + speedNote + selPanel + '</div>';
     const essences = '<div class="card mt-3"><h3 class="h3">' + tri('Skill Essences — les 10, chiffrées', 'Skill Essences — all 10, with numbers', 'Skill Essences — las 10') + ' ' + badge('planner 07/2026') + ' <span class="mono text-xs opacity-70">· 2 slots</span></h3>'
       + '<div class="tblwrap mt-2"><table class="tbl"><thead><tr><th>Essence</th><th>SP</th><th>' + tri('Requiert', 'Requires', 'Requiere') + '</th></tr></thead><tbody>'
       + D.sf.map(e => '<tr class="' + (e.name === 'Kurohitsugi' || e.name === 'Splitting Standstill' ? 'hl' : '') + '"><td><b>' + esc(e.name) + '</b>' + (e.who ? ' <span class="text-xs opacity-60">· ' + esc(e.who) + '</span>' : '') + '</td><td class="mono goldc">' + e.sp + '</td><td class="mono text-xs">' + esc(e.req) + '</td></tr>').join('')
       + '</tbody></table></div>'
       + '<p class="text-xs opacity-70 mt-2">' + tri('Kurohitsugi est le vrai nom de l’« essence pinacle K360 » du build — et les seuils DOUBLES existent (Slicing Dropkick, One Inch Punch, Blood Tax côté Strength). Cœur : 87 + 9 + 4 = 100 SP pile.', 'Kurohitsugi is the true name of the build’s “K360 pinnacle essence” — and DUAL gates exist. Core: 87 + 9 + 4 = exactly 100 SP.', 'Kurohitsugi es la esencia pináculo K360. Núcleo: 87+9+4 = 100 SP.') + '</p></div>';
-    return head + raceCard + '<div class="mt-3" style="display:grid;gap:12px">' + branches + '</div>' + essences;
+    return head + raceCard + essences;
   }
 
   /* ---------- chrome ---------- */
@@ -554,14 +681,7 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
   /* ---------- événements ---------- */
   document.addEventListener('click', ev => {
     const el = ev.target.closest('[data-act]');
-    if (!el) {
-      const det = ev.target.closest('summary');
-      if (det) { // mémorise l'état ouvert/fermé des branches
-        const br = det.parentElement;
-        setTimeout(() => { if (br.open) SIM.open.add(br.dataset.branch); else SIM.open.delete(br.dataset.branch); }, 0);
-      }
-      return;
-    }
+    if (!el) return;
     const act = el.dataset.act, id = el.dataset.id;
     const getNode = () => NODE.get(id) && NODE.get(id).n;
     switch (act) {
@@ -571,7 +691,7 @@ details.branch[open] > summary::before { transform: rotate(90deg); }
       case 'stab': startRace = el.dataset.r; break;
       case 'tier': charmTier = +el.dataset.t; break;
       case 'gslot': gearSlot = el.dataset.s; break;
-      case 'srace': SIM.raceTab = el.dataset.r; SIM.sel = null; break;
+      case 'stree': SIM.tree = el.dataset.t; SIM.sel = null; break;
       case 'knode': SIM.sel = id; break;
       case 'buy': {
         const n = getNode(); if (!n || !canBuy(n)) break;
